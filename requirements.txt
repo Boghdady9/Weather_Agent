@@ -1,0 +1,8 @@
+huggingface_hub==0.22.2
+gradio==3.41.2
+python-dotenv==1.0.0
+requests==2.31.0
+langchain
+langchain_core
+langchain_google_genai
+langchain_community
