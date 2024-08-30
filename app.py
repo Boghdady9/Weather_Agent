@@ -16,6 +16,8 @@ import uuid
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 import gradio as gr
+import base64
+
 
 load_dotenv(dotenv_path='api.env.txt')
 Langchain_API_KEY = os.getenv('LANGCHAIN_API')
@@ -210,23 +212,49 @@ agent_with_chat_history = RunnableWithMessageHistory(
 session_ids = {}
 
 def gradio_interface(user_input, session_id):
-    # If session_id is not in session_ids, it's a new session
     if session_id not in session_ids:
-        # Generate a new unique session ID
         new_session_id = str(uuid.uuid4())
         session_ids[session_id] = new_session_id
     else:
         new_session_id = session_ids[session_id]
-
+    
     result = agent_with_chat_history.invoke(
         {"input": user_input},
         config={"configurable": {"session_id": new_session_id}}
     )
     return [[user_input, result['output']]]
 
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
+
+# Encode the image
+image_path = "/workspaces/Weather_Agent/productmanagerinterview_logo.jpeg"
+encoded_image = encode_image(image_path)
+
+info_text = f"""
+<div style="display: flex; align-items: flex-start;">
+    <img src="data:image/jpeg;base64,{encoded_image}" alt="Logo" style="width: 200px; height: 200px; object-fit: cover; margin-right: 20px;">
+    <div>
+        <h2>Product Manager Accelerator Program</h2>
+        <p>The Product Manager Accelerator Program is designed to support PM professionals through every stage of their career. From students looking for entry-level jobs to Directors looking to take on a leadership role, our program has helped over hundreds of students fulfill their career aspirations.</p>
+        <p>Our Product Manager Accelerator community are ambitious and committed. Through our program they have learnt, honed and developed new PM and leadership skills, giving them a strong foundation for their future endeavours.</p>
+        <p>Learn product management for free today on our <a href="https://www.youtube.com/c/drnancyli?sub_confirmation=1" target="_blank">YouTube channel</a></p>
+        <h3>Interested in PM Accelerator Pro?</h3>
+        <ol>
+            <li>Attend the <a href="https://www.drnancyli.com/masterclass" target="_blank">Product Masterclass</a> to learn more about the program details, price, different packages, and stay until the end to get FREE AI Course. Learn how to create a killer product portfolio in two weeks that will help you land any PM job (traditional or AI) even if you were laid off or have zero PM experience.</li>
+            <li>Reserve your early bird ticket and submit an application to talk to our Head of Admission</li>
+            <li>Successful applicants join our PMA Pro community to receive customized coaching!</li>
+        </ol>
+    </div>
+</div>
+"""
+
 with gr.Blocks() as demo:
-    gr.Markdown("# Weather Assistant")
+    gr.Markdown("# Weather Assistant - Done By Mohamed Boghdady")
+    
     chatbot = gr.Chatbot()
+    
     with gr.Row():
         txt = gr.Textbox(
             show_label=False,
@@ -234,7 +262,17 @@ with gr.Blocks() as demo:
             lines=1,
             container=False
         )
-        session_id_box = gr.Textbox(visible=False, value=str(uuid.uuid4()))
-        txt.submit(gradio_interface, inputs=[txt, session_id_box], outputs=chatbot)
+        submit_btn = gr.Button("Submit")
+    
+    session_id_box = gr.Textbox(visible=False, value=str(uuid.uuid4()))
+    
+    # Add info button
+    info_btn = gr.Button("Info")
+    info_box = gr.HTML(visible=False, value=info_text)
+    
+    # Set up event handlers
+    submit_btn.click(gradio_interface, inputs=[txt, session_id_box], outputs=chatbot)
+    txt.submit(gradio_interface, inputs=[txt, session_id_box], outputs=chatbot)
+    info_btn.click(lambda: gr.update(visible=True), outputs=info_box)
 
 demo.launch(share=True)
