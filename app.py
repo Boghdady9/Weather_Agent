@@ -230,7 +230,7 @@ with gr.Blocks() as demo:
     with gr.Row():
         txt = gr.Textbox(
             show_label=False,
-            placeholder="Ask about the weather...",
+            placeholder="Ask about the weather in any city...",
             lines=1,
             container=False
         )
